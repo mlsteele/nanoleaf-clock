@@ -1,20 +1,7 @@
-from nanoleaf.nanoleaf import setup
-from nanoleaf.nanoleaf import Aurora
 import requests
 from pprint import pprint
 import time
 from secrets import ip, port, auth_token
-
-# ips = setup.find_auroras()
-# print(ips)
-
-# mac address 00:55:DA:50:A2:58
-# token = setup.generate_auth_token(ip)
-# print(token)
-
-# my_aurora = Aurora(ip, auth_token)
-# my_aurora.on = True
-# my_aurora.effect = "Violets Are Blue"
 
 def api_call(method, endpoint, data=None):
   url = f"http://{ip}:{port}/api/v1/{auth_token}/{endpoint}"
