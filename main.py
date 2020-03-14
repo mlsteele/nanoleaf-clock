@@ -4,6 +4,7 @@ from pprint import pprint
 import time
 import random
 from random import randrange
+from datetime import datetime, timedelta
 
 def api_call(method, endpoint, data=None):
   url = f"http://{ip}:{port}/api/v1/{auth_token}/{endpoint}"
@@ -77,15 +78,26 @@ def flash_panels_order():
 #   "loop": False,
 # }}))
 
+now = datetime.now()
+end_hour = 23
+end_minute = 30
+seconds_until_end = (timedelta(hours=24) - (now -
+  now.replace(hour=end_hour, minute=end_minute, second=0, microsecond=0))).total_seconds() % (24 * 3600)
+hours_until_end = seconds_until_end / 3600.
+print(f"hours_until_end: {hours_until_end}")
+
 orange = (255, 100, 0)
 orange2 = (220, 140, 50)
 blue = (20, 0, 80)
 list_difference = lambda l1,l2: [x for x in l1 if x not in l2]
-n_orange = 5
+n_blue = min(len(panel_ids), int(hours_until_end*2))
+print(f"n_blue: {n_blue}")
+n_orange = len(panel_ids) - n_blue
+print(f"n_orange: {n_orange}")
 orange_panels = random.sample(panel_ids, n_orange)
 blue_panels = list_difference(panel_ids, orange_panels)
 
-pprint(api_call("PUT", "effects", {"write": {
+api_call("PUT", "effects", {"write": {
   "command": "display",
   "animType": "custom",
   "animData": anim_data({
@@ -93,4 +105,4 @@ pprint(api_call("PUT", "effects", {"write": {
     **{id: [(*blue, 30)] for id in blue_panels},
   }),
   "loop": True,
-}}))
+}})
