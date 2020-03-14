@@ -2,6 +2,7 @@ import requests
 from secrets import ip, port, auth_token
 from pprint import pprint
 import time
+import random
 from random import randrange
 
 def api_call(method, endpoint, data=None):
@@ -79,8 +80,10 @@ def flash_panels_order():
 orange = (255, 100, 0)
 orange2 = (220, 140, 50)
 blue = (20, 0, 80)
-blue_panels = panel_ids.copy()
-orange_panels = [blue_panels.pop(randrange(0, len(blue_panels)-1)) for _ in range(5)]
+list_difference = lambda l1,l2: [x for x in l1 if x not in l2]
+n_orange = 5
+orange_panels = random.sample(panel_ids, n_orange)
+blue_panels = list_difference(panel_ids, orange_panels)
 
 pprint(api_call("PUT", "effects", {"write": {
   "command": "display",
