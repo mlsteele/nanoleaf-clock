@@ -1,7 +1,8 @@
 import requests
+from secrets import ip, port, auth_token
 from pprint import pprint
 import time
-from secrets import ip, port, auth_token
+from random import randrange
 
 def api_call(method, endpoint, data=None):
   url = f"http://{ip}:{port}/api/v1/{auth_token}/{endpoint}"
@@ -33,6 +34,26 @@ panel_ids_raw = [251, 126, 87, 209, 8, 203, 48, 122, 162, 191]
 panel_ids_reorder = [10, 1, 2, 9, 3, 4, 5, 6, 8, 7]
 panel_ids = [x[0] for x in sorted(zip(panel_ids_raw, panel_ids_reorder), key=lambda x: x[1])]
 
+def flash_panels_order():
+  for panel_id in panel_ids:
+    api_call("PUT", "effects", {"write": {
+      "command": "display",
+      "animType": "custom",
+      "animData": anim_data({
+        panel_id: [(255, 255, 255, 2), (255, 0, 0, 4)],
+      }),
+      "loop": True,
+    }})
+    time.sleep(1)
+    api_call("PUT", "effects", {"write": {
+      "command": "display",
+      "animType": "custom",
+      "animData": anim_data({
+        panel_id: [(0, 0, 0, 5)],
+      }),
+      "loop": False,
+    }})
+
 # pprint(api_call("GET", ""))
 # pprint(api_call("GET", "state"))
 # print(api_call("GET", "state/on"))
@@ -55,31 +76,18 @@ panel_ids = [x[0] for x in sorted(zip(panel_ids_raw, panel_ids_reorder), key=lam
 #   "loop": False,
 # }}))
 
-# pprint(api_call("PUT", "effects", {"write": {
-#   "command": "display",
-#   "animType": "custom",
-#   "animData": anim_data({
-#     162: [(255, 255, 255, 5), (255, 0, 0, 10)],
-#   }),
-#   "loop": True,
-# }}))
+orange = (255, 100, 0)
+orange2 = (220, 140, 50)
+blue = (20, 0, 80)
+blue_panels = panel_ids.copy()
+orange_panels = [blue_panels.pop(randrange(0, len(blue_panels)-1)) for _ in range(5)]
 
-print(panel_ids)
-for panel_id in panel_ids:
-  api_call("PUT", "effects", {"write": {
-    "command": "display",
-    "animType": "custom",
-    "animData": anim_data({
-      panel_id: [(255, 255, 255, 2), (255, 0, 0, 4)],
-    }),
-    "loop": True,
-  }})
-  time.sleep(1)
-  api_call("PUT", "effects", {"write": {
-    "command": "display",
-    "animType": "custom",
-    "animData": anim_data({
-      panel_id: [(0, 0, 0, 5)],
-    }),
-    "loop": False,
-  }})
+pprint(api_call("PUT", "effects", {"write": {
+  "command": "display",
+  "animType": "custom",
+  "animData": anim_data({
+    **{id: [(*orange, 20+d), (*orange2, 20+d)] for (id, d) in ((id, randrange(20)) for id in orange_panels)},
+    **{id: [(*blue, 30)] for id in blue_panels},
+  }),
+  "loop": True,
+}}))
