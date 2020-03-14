@@ -2,7 +2,7 @@ from nanoleaf.nanoleaf import setup
 from nanoleaf.nanoleaf import Aurora
 import requests
 from pprint import pprint
-from .secrets import {ip, port, auth_token}
+from secrets import ip, port, auth_token
 
 # ips = setup.find_auroras()
 # print(ips)
@@ -18,6 +18,7 @@ from .secrets import {ip, port, auth_token}
 def api_call(method, endpoint, data=None):
   url = f"http://{ip}:{port}/api/v1/{auth_token}/{endpoint}"
   print(f"> {method} {url}")
+  print(f"  {data}")
   res = requests.request(method, url, json=data)
   res.raise_for_status()
   if res.text == "":
@@ -26,13 +27,16 @@ def api_call(method, endpoint, data=None):
 
 # Takes a map from panel ID to a list of frames.
 # Each frame is a list [r, g, b, t].
+# Frames other than the first for each panel seem to have no effect.
 def anim_data(data):
   # https://forum.nanoleaf.me/docs/openapi#_sh5xwlxaz1pa
   res = f"{len(data)}"
   for (panel_id, frames) in data.items():
-    res += f" {len(frames)}"
+    res += f" {panel_id} {len(frames)}"
     for [r, g, b, t] in frames:
-      res += f" {r} {g} {b} {t}"
+      w = 0
+      res += f" {r} {g} {b} {w} {t}"
+  return res
 
 # pprint(api_call("GET", ""))
 # pprint(api_call("GET", "state"))
@@ -55,3 +59,12 @@ def anim_data(data):
 #   "animData": "1 162 1 255 0 0 0 1",
 #   "loop": False,
 # }}))
+
+pprint(api_call("PUT", "effects", {"write": {
+  "command": "display",
+  "animType": "static",
+  "animData": anim_data({
+    162: [(255, 255, 0, 20)],
+  }),
+  "loop": False,
+}}))
