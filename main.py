@@ -9,7 +9,8 @@ from datetime import datetime, timedelta
 def api_call(method, endpoint, data=None):
   url = f"http://{ip}:{port}/api/v1/{auth_token}/{endpoint}"
   print(f"> {method} {url}")
-  print(f"  {data}")
+  # if data:
+  #   print(f"  {data}")
   res = requests.request(method, url, json=data)
   res.raise_for_status()
   if res.text == "":
@@ -56,11 +57,6 @@ def flash_panels_order():
       "loop": False,
     }})
 
-# pprint(api_call("GET", ""))
-# pprint(api_call("GET", "state"))
-# print(api_call("GET", "state/on"))
-# print(api_call("PUT", "state", {"on": {"value": False}}))
-
 # print(api_call("PUT", "state", {
 #   'on': {'value': True},
 #   'brightness': {'value': 30},
@@ -70,40 +66,43 @@ def flash_panels_order():
 
 # pprint(api_call("PUT", "effects", {"write": {"command": "requestAll"}}))
 
-# Set one panel
-# pprint(api_call("PUT", "effects", {"write": {
-#   "command": "display",
-#   "animType": "static",
-#   "animData": "1 162 1 255 0 0 0 1",
-#   "loop": False,
-# }}))
+def show_clock():
+  now = datetime.now()
+  end_hour, end_minute = 23, 30
+  seconds_until_end = (timedelta(hours=24) - (now -
+    now.replace(hour=end_hour, minute=end_minute, second=0, microsecond=0))).total_seconds() % (24 * 3600)
+  hours_until_end = seconds_until_end / 3600.
+  print(f"hours_until_end: {hours_until_end}")
 
-now = datetime.now()
-end_hour, end_minute = 23, 30
-seconds_until_end = (timedelta(hours=24) - (now -
-  now.replace(hour=end_hour, minute=end_minute, second=0, microsecond=0))).total_seconds() % (24 * 3600)
-hours_until_end = seconds_until_end / 3600.
-print(f"hours_until_end: {hours_until_end}")
+  orange = (255, 100, 0)
+  orange2 = (220, 140, 50)
+  blue = (20, 0, 80)
+  list_difference = lambda l1,l2: [x for x in l1 if x not in l2]
+  n_blue = min(len(panel_ids), int(hours_until_end*2))
+  if hours_until_end > 24-4:
+    n_blue = 0
+  print(f"n_blue: {n_blue}")
+  n_orange = len(panel_ids) - n_blue
+  print(f"n_orange: {n_orange}")
+  orange_panels = random.sample(panel_ids, n_orange)
+  blue_panels = list_difference(panel_ids, orange_panels)
 
-orange = (255, 100, 0)
-orange2 = (220, 140, 50)
-blue = (20, 0, 80)
-list_difference = lambda l1,l2: [x for x in l1 if x not in l2]
-n_blue = min(len(panel_ids), int(hours_until_end*2))
-if hours_until_end > 24-4:
-  n_blue = 0
-print(f"n_blue: {n_blue}")
-n_orange = len(panel_ids) - n_blue
-print(f"n_orange: {n_orange}")
-orange_panels = random.sample(panel_ids, n_orange)
-blue_panels = list_difference(panel_ids, orange_panels)
+  api_call("PUT", "effects", {"write": {
+    "command": "display",
+    "animType": "custom",
+    "animData": anim_data({
+      **{id: [(*orange, 20+d), (*orange2, 20+d)] for (id, d) in ((id, randrange(20)) for id in orange_panels)},
+      **{id: [(*blue, 30)] for id in blue_panels},
+    }),
+    "loop": True,
+  }})
 
-api_call("PUT", "effects", {"write": {
-  "command": "display",
-  "animType": "custom",
-  "animData": anim_data({
-    **{id: [(*orange, 20+d), (*orange2, 20+d)] for (id, d) in ((id, randrange(20)) for id in orange_panels)},
-    **{id: [(*blue, 30)] for id in blue_panels},
-  }),
-  "loop": True,
-}})
+def main():
+  if not api_call("GET", "state/on")['value']:
+    print("skipping since lights are off")
+    return
+
+  show_clock()
+
+if __name__ == "__main__":
+  main()
