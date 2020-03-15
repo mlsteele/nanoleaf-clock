@@ -68,7 +68,7 @@ def flash_panels_order():
 
 def show_clock():
   now = datetime.now()
-  end_hour, end_minute = 23, 30
+  end_hour, end_minute = 23, 0
   seconds_until_end = (timedelta(hours=24) - (now -
     now.replace(hour=end_hour, minute=end_minute, second=0, microsecond=0))).total_seconds() % (24 * 3600)
   hours_until_end = seconds_until_end / 3600.
